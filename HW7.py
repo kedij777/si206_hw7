@@ -1,7 +1,7 @@
 
 # Your name: Kedi Jiang
-# Your student id:
-# Your email:
+# Your student id: 
+# Your email: kedij@umich.edu
 # List who you have worked with on this project:
 
 import unittest
