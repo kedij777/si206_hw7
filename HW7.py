@@ -1,5 +1,5 @@
 
-# Your name:
+# Your name: Kedi Jiang
 # Your student id:
 # Your email:
 # List who you have worked with on this project:
