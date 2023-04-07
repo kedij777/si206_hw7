@@ -53,7 +53,15 @@ def make_positions_table(data, cur, conn):
 #     created for you -- see make_positions_table above for details.
 
 def make_players_table(data, cur, conn):
-    pass
+    cur.execute("DROP TABLE IF EXISTS Players")
+    cur.execute("CREATE TABLE Players (id INTEGER PRIMARY KEY, name TEXT, position_id INTEGER, birthyear INTEGER, nationality TEXT)")
+    for players in data["squad"]:
+        # NOTE: the execute() method expects a tuple of parameter values as its second argument. Even if there is only one parameter, it must be passed as a tuple. Therefore, to create a tuple with a single element, we need to add the trailing comma after players["position"].
+        cur.execute("SELECT id FROM Positions WHERE position = ?", (players["position"],))        
+        postionID = cur.fetchone()[0]
+        birthYear = players["dateOfBirth"].split('-')[0]
+        cur.execute("INSERT INTO Players (id,name,position_id,birthyear,nationality) VALUES (?,?,?,?,?)",(players["id"], players["name"], postionID,birthYear,players["nationality"]))
+    conn.commit()
 
 ## [TASK 2]: 10 points
 # Finish the function nationality_search
@@ -66,7 +74,11 @@ def make_players_table(data, cur, conn):
         # the player's name, their position_id, and their nationality.
 
 def nationality_search(countries, cur, conn):
-    pass
+    l = []
+    for country in countries:
+        cur.execute("SELECT name, position_id, nationality FROM Players WHERE nationality = ?", (country,))
+        l.extend(cur.fetchall())
+    return l
 
 ## [TASK 3]: 10 points
 # finish the function birthyear_nationality_search
@@ -85,7 +97,14 @@ def nationality_search(countries, cur, conn):
 
 
 def birthyear_nationality_search(age, country, cur, conn):
-    pass
+    cur.execute("SELECT name, nationality, birthyear FROM Players WHERE nationality = ? AND birthyear < ?", (country,2023 - age))
+    l = []
+    l.extend(cur.fetchall())
+    return l
+
+    
+        
+
 
 ## [TASK 4]: 15 points
 # finish the function position_birth_search
@@ -105,7 +124,10 @@ def birthyear_nationality_search(age, country, cur, conn):
     # HINT: You'll have to use JOIN for this task.
 
 def position_birth_search(position, age, cur, conn):
-       pass
+       cur.execute("SELECT Players.name, Positions.position, Players.birthyear FROM Players JOIN Positions on Positions.id = Players.position_id AND Positions.position = ? AND birthyear > ?", (position,2023 - age))
+       l = []
+       l.extend(cur.fetchall())
+       return l
 
 
 # [EXTRA CREDIT]
@@ -144,7 +166,20 @@ def position_birth_search(position, age, cur, conn):
 #     the passed year. 
 
 def make_winners_table(data, cur, conn):
-    pass
+    cur.execute("DROP TABLE IF EXISTS Winners")
+    idL = []
+    nameL = []
+    for season in data["seasons"]:
+        if season["winner"]:
+            idL.append(season["id"])
+            nameL.append(season["winner"]["name"])
+    cur.execute("CREATE TABLE IF NOT EXISTS Winners (id INTEGER PRIMARY KEY, name TEXT)")
+    for i in range(len(idL)):
+        cur.execute("INSERT INTO Winners (id, name) VALUES (?, ?)", (idL[i], nameL[i]))
+
+    conn.commit()
+
+
 
 def make_seasons_table(data, cur, conn):
     pass
@@ -204,22 +239,20 @@ class TestAllMethods(unittest.TestCase):
         self.assertEqual(len(c), 1)
         self.assertEqual(c, [('Teden Mengi', 'Defence', 2002)])
     
-    # test extra credit
+    # # test extra credit
     def test_make_winners_table(self):
         self.cur2.execute('SELECT * from Winners')
         winners_list = self.cur2.fetchall()
+        self.assertEqual(winners_list[0], (23,"Manchester City FC"))
+    # def test_make_seasons_table(self):
+    #     self.cur2.execute('SELECT * from Seasons')
+    #     seasons_list = self.cur2.fetchall()
 
-        pass
+    #     pass
 
-    def test_make_seasons_table(self):
-        self.cur2.execute('SELECT * from Seasons')
-        seasons_list = self.cur2.fetchall()
+    # def test_winners_since_search(self):
 
-        pass
-
-    def test_winners_since_search(self):
-
-        pass
+    #     pass
 
 
 def main():
